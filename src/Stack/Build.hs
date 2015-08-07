@@ -60,7 +60,7 @@ build :: M env m
       -> Maybe FileLock
       -> BuildOpts
       -> m ()
-build setLocalFiles mbuildLk bopts = do
+build setLocalFiles mbuildLk bopts = errorWhenUnsupported bopts $ do
     menv <- getMinimalEnvOverride
 
     (mbp, locals, extraToBuild, sourceMap) <- loadSourceMap bopts
@@ -161,3 +161,13 @@ clean = do
     forM_
         (Map.keys (envConfigPackages econfig))
         (distDirFromDir >=> removeTreeIfExists)
+
+errorWhenUnsupported :: M env m => BuildOpts -> m () -> m ()
+errorWhenUnsupported bopts inner = do
+    useGHCJS <- asks (configUseGHCJS . getConfig)
+    if useGHCJS
+        then case boptsFinalAction bopts of
+            DoTests {} -> $logError "GHCJS doesn't support running tests (yet!)"
+            DoBenchmarks {} -> $logError "GHCJS doesn't support running benchmarks (yet!)"
+            DoNothing {} -> inner
+        else inner

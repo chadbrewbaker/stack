@@ -94,6 +94,8 @@ data Config =
          -- version is available? Can be overridden by command line options.
          ,configSkipGHCCheck        :: !Bool
          -- ^ Don't bother checking the GHC version or architecture.
+         ,configUseGHCJS            :: Bool
+         -- ^ Build with GHCJS
          ,configSkipMsys            :: !Bool
          -- ^ On Windows: don't use a locally installed MSYS
          ,configLocalBin            :: !(Path Abs Dir)
@@ -480,6 +482,8 @@ data ConfigMonoid =
     -- ^ See: 'configInstallGHC'
     ,configMonoidSkipGHCCheck        :: !(Maybe Bool)
     -- ^ See: 'configSkipGHCCheck'
+    ,configMonoidUseGHCJS            :: !(Maybe Bool)
+    -- ^ See: 'configUseGHCJS
     ,configMonoidSkipMsys            :: !(Maybe Bool)
     -- ^ See: 'configSkipMsys'
     ,configMonoidRequireStackVersion :: !VersionRange
@@ -513,6 +517,7 @@ instance Monoid ConfigMonoid where
     , configMonoidSystemGHC = Nothing
     , configMonoidInstallGHC = Nothing
     , configMonoidSkipGHCCheck = Nothing
+    , configMonoidUseGHCJS = Nothing
     , configMonoidSkipMsys = Nothing
     , configMonoidRequireStackVersion = anyVersion
     , configMonoidOS = Nothing
@@ -533,6 +538,7 @@ instance Monoid ConfigMonoid where
     , configMonoidSystemGHC = configMonoidSystemGHC l <|> configMonoidSystemGHC r
     , configMonoidInstallGHC = configMonoidInstallGHC l <|> configMonoidInstallGHC r
     , configMonoidSkipGHCCheck = configMonoidSkipGHCCheck l <|> configMonoidSkipGHCCheck r
+    , configMonoidUseGHCJS = configMonoidUseGHCJS l <|> configMonoidUseGHCJS r
     , configMonoidSkipMsys = configMonoidSkipMsys l <|> configMonoidSkipMsys r
     , configMonoidRequireStackVersion = intersectVersionRanges (configMonoidRequireStackVersion l)
                                                                (configMonoidRequireStackVersion r)
@@ -562,6 +568,7 @@ parseConfigMonoidJSON obj = do
     configMonoidSystemGHC <- obj ..:? "system-ghc"
     configMonoidInstallGHC <- obj ..:? "install-ghc"
     configMonoidSkipGHCCheck <- obj ..:? "skip-ghc-check"
+    configMonoidUseGHCJS <- obj ..:? "use-ghcjs"
     configMonoidSkipMsys <- obj ..:? "skip-msys"
     configMonoidRequireStackVersion <- unVersionRangeJSON <$>
                                        obj ..:? "require-stack-version"

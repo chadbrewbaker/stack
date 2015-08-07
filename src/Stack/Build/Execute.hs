@@ -486,7 +486,8 @@ ensureConfig pkgDir ExecuteEnv {..} Task {..} announce cabal cabalfp extra = do
     when needConfig $ withMVar eeConfigureLock $ \_ -> do
         deleteCaches pkgDir
         announce
-        cabal False $ "configure" : map T.unpack configOpts
+        config <- asks getConfig
+        cabal False $ "configure" : addOptGHCJS config (map T.unpack configOpts)
         writeConfigCache pkgDir newConfigCache
         writeCabalMod pkgDir newCabalMod
 
@@ -673,7 +674,7 @@ singleBuild ac@ActionContext {..} ee@ExecuteEnv {..} task@Task {..} =
     cabal (console && configHideTHLoading config) $
         (case taskType of
             TTLocal lp -> "build" : map T.unpack (Set.toList $ lpComponents lp)
-            TTUpstream _ _ -> ["build"]) ++ extraOpts
+            TTUpstream _ _ -> ["build"]) ++ addOptGHCJS config extraOpts
 
     let doHaddock = shouldHaddockPackage eeBuildOpts eeWanted (packageName package) &&
                     -- Works around haddock failing on bytestring-builder since it has no modules
@@ -989,3 +990,8 @@ extraBuildOptions :: M env m => m [String]
 extraBuildOptions = do
     hpcIndexDir <- toFilePath . (</> dotHpc) <$> hpcRelativeDir
     return ["--ghc-options", "-hpcdir " ++ hpcIndexDir ++ " -ddump-hi -ddump-to-file"]
+
+addOptGHCJS :: Config -> [String] -> [String]
+addOptGHCJS config
+    | configUseGHCJS config = ("--ghcjs" :)
+    | otherwise = id

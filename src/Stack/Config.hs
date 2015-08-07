@@ -117,6 +117,7 @@ configFromConfigMonoid configStackRoot mproject configMonoid@ConfigMonoid{..} = 
          configSystemGHC = fromMaybe True configMonoidSystemGHC
          configInstallGHC = fromMaybe False configMonoidInstallGHC
          configSkipGHCCheck = fromMaybe False configMonoidSkipGHCCheck
+         configUseGHCJS = fromMaybe False configMonoidUseGHCJS
          configSkipMsys = fromMaybe False configMonoidSkipMsys
 
          configExtraIncludeDirs = configMonoidExtraIncludeDirs
